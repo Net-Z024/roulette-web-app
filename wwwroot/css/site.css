@@ -20,3 +20,52 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+
+/* Additional CSS styles */
+#roulette-container {
+    background-color: #f9f9f9;
+    border-radius: 50%;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+    padding: 10px;
+}
+
+.segment {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    color: white;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+/* Button hover effect */
+#spin-button:hover {
+    background-color: #45a049;
+}
+
+/* Result styling */
+#result-display h3 {
+    font-family: 'Arial', sans-serif;
+    font-size: 24px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Customize the font and color of the button */
+#spin-button {
+    font-family: Arial, sans-serif;
+    background-color: #4CAF50;
+    border: none;
+    padding: 12px 24px;
+    font-size: 18px;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+    /* Button active effect */
+    #spin-button:active {
+        background-color: #388E3C;
+    }

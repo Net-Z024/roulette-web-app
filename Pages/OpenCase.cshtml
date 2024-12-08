@@ -1,0 +1,87 @@
+﻿@page
+@Html.AntiForgeryToken()
+@model CaseBattleNew.Pages.OpenCaseModel
+@{
+    ViewData["Title"] = "Open Case Roulette";
+}
+
+<h2 style="text-align: center; font-family: Arial, sans-serif; color: #333;">Case Roulette</h2>
+
+<div id="roulette-container" style="position: relative; width: 350px; height: 350px; margin: auto; border: 5px solid #333; border-radius: 50%; overflow: hidden; box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);">
+    <div id="roulette-wheel" style="position: absolute; width: 100%; height: 100%; transition: transform 4s cubic-bezier(0.17, 0.67, 0.83, 0.67);">
+        <!-- Segments of the roulette wheel -->
+        <div class="segment" style="position: absolute; width: 50%; height: 50%; background-color: #FFD700; transform-origin: 100% 100%; transform: rotate(0deg) skewY(-30deg);">Common</div>
+        <div class="segment" style="position: absolute; width: 50%; height: 50%; background-color: #FF6347; transform-origin: 100% 100%; transform: rotate(90deg) skewY(-30deg);">Epic</div>
+        <div class="segment" style="position: absolute; width: 50%; height: 50%; background-color: #87CEFA; transform-origin: 100% 100%; transform: rotate(180deg) skewY(-30deg);">Rare</div>
+        <div class="segment" style="position: absolute; width: 50%; height: 50%; background-color: #32CD32; transform-origin: 100% 100%; transform: rotate(270deg) skewY(-30deg);">Legendary</div>
+    </div>
+</div>
+
+<!-- Spin button -->
+<button id="spin-button" onclick="startSpin()" style="display: block; margin: 30px auto; padding: 12px 24px; background-color: #4CAF50; color: white; font-size: 18px; border: none; border-radius: 5px; cursor: pointer; transition: background-color 0.3s;">
+    Open Case
+</button>
+
+<!-- Result display -->
+<div id="result-display" style="display: none; text-align: center; margin-top: 20px;">
+    <h3 style="font-family: Arial, sans-serif; font-size: 20px; color: #333;">Result: <span id="result-name" style="font-weight: bold; color: #FF6347;"></span></h3>
+</div>
+
+
+
+
+<script>
+    async function startSpin() {
+        const spinButton = document.getElementById('spin-button');
+        const resultDisplay = document.getElementById('result-display');
+        const resultName = document.getElementById('result-name');
+        const rouletteWheel = document.getElementById('roulette-wheel');
+
+        // Disable the button while spinning
+        spinButton.disabled = true;
+        resultDisplay.style.display = "none";
+
+        // Fetch the result from the server
+        try {
+            // Adjust this to match your handler's URL
+            fetch('/OpenCase?handler=OpenCase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value // CSRF token
+                }
+            }).then(response => response.json())
+                .then(data => {
+                    console.log("HEJ!", data); // Log the received data
+
+                    // Ensure the response data contains the expected fields
+                    if (data.index === undefined || data.name === undefined) {
+                        throw new Error("Invalid response data.");
+                    }
+
+                    const selectedIndex = data.index;  // Index from the server
+                    const itemName = data.name;        // Name of the selected item
+
+                    // Calculate the target rotation (full spins + selected index position)
+                    const segmentDegrees = 360 / 4; // 4 segments on the wheel
+                    const spinCount = 5; // Number of full spins before stopping
+                    const targetRotation = (spinCount * 360) + (selectedIndex * segmentDegrees);
+
+                    // Apply the rotation to the roulette wheel
+                    rouletteWheel.style.transform = `rotate(${targetRotation}deg)`;
+
+                    // Show result after spin ends (wait for the spin to finish)
+                    setTimeout(() => {
+                        resultName.textContent = itemName;
+                        resultDisplay.style.display = "block";
+                        spinButton.disabled = false;
+                    }, 4000); // Match the duration of the spinning animation (4s)
+                });
+
+        } catch (error) {
+            console.error('Error during fetch:', error);
+            alert(`Error: ${error.message}`);
+            spinButton.disabled = false;
+        }
+    }
+</script>
