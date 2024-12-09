@@ -1,71 +1,119 @@
 html {
-  font-size: 14px;
+    font-size: 14px;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
+    html {
+        font-size: 16px;
+    }
 }
 
 html {
-  position: relative;
-  min-height: 100%;
+    position: relative;
+    min-height: 100%;
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    color: #333;
 }
 
+/* Button Styles */
+button {
+    cursor: pointer;
+    border: none;
+    transition: all 0.3s ease;
+}
 
-/* Additional CSS styles */
+#spin-button {
+    background-color: #4CAF50;
+    color: white;
+    padding: 12px 24px;
+    font-size: 18px;
+    border-radius: 5px;
+    margin: 30px auto;
+    display: block;
+}
+
+    #spin-button:hover {
+        background-color: #45a049;
+    }
+
+    #spin-button:active {
+        background-color: #388E3C;
+    }
+
+/* Result Display */
+#result-display {
+    display: none;
+    text-align: center;
+    margin-top: 20px;
+}
+
+    #result-display h3 {
+        font-size: 24px;
+        font-weight: bold;
+        color: #333;
+    }
+
+#result-name {
+    font-weight: bold;
+    color: #FF6347;
+}
+
+/* Roulette Wheel */
 #roulette-container {
     background-color: #f9f9f9;
+    width: 350px;
+    height: 350px;
+    margin: auto;
     border-radius: 50%;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
-    padding: 10px;
+    border: 5px solid #333;
+    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+    position: relative;
+    overflow: hidden;
+}
+
+#roulette-wheel {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smooth animation */
 }
 
 .segment {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 18px;
+    position: absolute;
+    width: 50%;
+    height: 50%;
     color: white;
     font-weight: bold;
-    text-transform: uppercase;
-}
-
-/* Button hover effect */
-#spin-button:hover {
-    background-color: #45a049;
-}
-
-/* Result styling */
-#result-display h3 {
-    font-family: 'Arial', sans-serif;
-    font-size: 24px;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Customize the font and color of the button */
-#spin-button {
-    font-family: Arial, sans-serif;
-    background-color: #4CAF50;
-    border: none;
-    padding: 12px 24px;
     font-size: 18px;
-    border-radius: 5px;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
+    text-transform: uppercase;
+    transform-origin: 100% 100%;
 }
 
-    /* Button active effect */
-    #spin-button:active {
-        background-color: #388E3C;
+    /* Segment Colors */
+    .segment:nth-child(1) {
+        background-color: blue;
+        transform: rotate(0deg);
+    }
+
+    .segment:nth-child(2) {
+        background-color: purple;
+        transform: rotate(90deg);
+    }
+
+    .segment:nth-child(3) {
+        background-color: red;
+        transform: rotate(180deg);
+    }
+
+    .segment:nth-child(4) {
+        background-color: gold;
+        transform: rotate(270deg);
     }
