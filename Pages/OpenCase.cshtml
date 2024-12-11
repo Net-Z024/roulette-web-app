@@ -7,15 +7,6 @@
 
 <h2 style="text-align: center; margin-top: 20px;">Case Roulette</h2>
 
-<div id="roulette-container">
-    <div id="roulette-wheel">
-        <div class="segment">Common</div>
-        <div class="segment">Rare</div>
-        <div class="segment">Epic</div>
-        <div class="segment">Legendary</div>
-    </div>
-</div>
-
 <!-- Spin Button -->
 <button id="spin-button" onclick="startSpin()">Open Case</button>
 
@@ -24,60 +15,76 @@
     <h3>Result: <span id="result-name"></span></h3>
 </div>
 
+<div class="raffle-roller">
+    <div class="raffle-roller-holder">
+        <div class="raffle-roller-container" style="margin-left: 0px;">
+            @foreach (var item in Model.CaseItems)
+            {
+                <div class="item class_red_item"
+                     style="background-image:url('@item.ImageUrl');">
+                    @item.Name
+                </div>
+            }
+        </div>
+    </div>
+</div>
 
-
-
+<center>
+    <span style="font-size: 25px;">
+        Your winning is <span style="color: green;" id="rolled">rolling</span>
+        <br>
+        <button onclick="window.location='';">reset</button>
+    </span>
+</center>
+<br>
+<div class="inventory"></div>
 
 <script>
+    // Serialize the CaseItems object to JavaScript
+    var caseItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CaseItems));
+
+    // This function handles starting the spin
     async function startSpin() {
         const spinButton = document.getElementById('spin-button');
-        const resultDisplay = document.getElementById('result-display');
-        const resultName = document.getElementById('result-name');
-        const rouletteWheel = document.getElementById('roulette-wheel');
-
-        // Map of segment names to their corresponding colors
-        const segmentColors = {
-            "Common": "blue",
-            "Rare": "purple",
-            "Epic": "red",
-            "Legendary": "gold"
-        };
-
         spinButton.disabled = true;
-        resultDisplay.style.display = "none";
 
         try {
-            const response = await fetch('/OpenCase?handler=OpenCase', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
-                }
-            });
+            // Prepare the dynamic case items (duplicates) for the roller
+            generateItemsForRoller();
 
-            const data = await response.json();
-
-            if (data.index === undefined || data.name === undefined) {
-                throw new Error("Invalid response data.");
-            }
-
-            const segmentDegrees = 360 / 4; // 4 segments
-            const spinCount = 5; // Number of full rotations
-            const targetRotation = (spinCount * 360) + (data.index * segmentDegrees);
-
-            // Apply rotation
-            rouletteWheel.style.transform = `rotate(${targetRotation}deg)`;
-
-            // Display result after animation
+            // Wait for the animation to complete before showing the result
             setTimeout(() => {
-                resultName.textContent = data.name;
+                const winningIndex = getRandomInt(0, caseItems.length); // Get a random winner index
+                const winningItem = document.querySelectorAll('.raffle-roller-container .item')[winningIndex];
 
-                // Set the result color based on the segment's color
-                resultName.style.color = segmentColors[data.name] || "#333"; // Default to dark gray if undefined
+                // Make sure the container width is large enough
+                //const containerWidth = $('.raffle-roller-container').width();
+                //const totalItemsWidth = caseItems.length * 100; // Assuming each item is 100px wide
 
-                resultDisplay.style.display = "block";
-                spinButton.disabled = false;
-            }, 4000); // Match animation duration
+                // Set the correct width for the container to fit all items
+                //$('.raffle-roller-container').css('width', totalItemsWidth + 'px');
+
+                // Animate the roller to simulate the spinning effect (with a large scroll distance)
+                $('.raffle-roller-container').css({
+                    transition: "all 8s cubic-bezier(.08,.6,0,1)" // 8s transition duration
+                });
+
+                // Scroll to the winning item
+                $('.raffle-roller-container').css('margin-left', `-${6770*winningIndex}px`);
+
+                // After the spin, mark the winning item
+                setTimeout(() => {
+                    $(winningItem).addClass('winning-item');
+                    $('#rolled').html(caseItems[winningIndex].Name); // Display the winner's name
+                    console.log(caseItems[winningIndex]);
+
+                    // Add the winning item to the inventory
+                    const winElement = `<div class='item' style='background-image: url("${caseItems[winningIndex].ImageUrl}");'></div>`;
+                    $(winElement).appendTo('.inventory');
+                }, 8500); // Delay after the spin ends (8s for animation + 500ms delay)
+
+            }, 500); // Initial delay before starting the animation
+
         } catch (error) {
             console.error("Error during fetch:", error);
             alert(`Error: ${error.message}`);
@@ -85,4 +92,21 @@
         }
     }
 
+    // Function to generate more pictures of the existing items for the roller
+    function generateItemsForRoller() {
+        // Clear existing items in the roller
+        $('.raffle-roller-container').html('');
+
+        // Duplicate the items to make the wheel bigger
+        for (let i = 0; i < 101; i++) {
+            const randomItem = caseItems[Math.floor(Math.random() * caseItems.length)];
+            const element = `<div class="item class_red_item" style="background-image:url(${randomItem.ImageUrl});"></div>`;
+            $(element).appendTo('.raffle-roller-container');
+        }
+    }
+
+    // Utility function to generate a random integer between min (inclusive) and max (exclusive)
+    function getRandomInt(min, max) {
+        return Math.floor(Math.random() * (max - min)) + min;
+    }
 </script>

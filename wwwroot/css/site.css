@@ -63,57 +63,118 @@ button {
     color: #FF6347;
 }
 
-/* Roulette Wheel */
-#roulette-container {
-    background-color: #f9f9f9;
-    width: 350px;
-    height: 350px;
-    margin: auto;
-    border-radius: 50%;
-    border: 5px solid #333;
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+@import url('https://fonts.googleapis.com/css?family=Arvo');
+
+
+.raffle-roller {
+    height: 100px;
     position: relative;
-    overflow: hidden;
+    margin: 60px auto 30px auto;
+    width: 900px;
 }
 
-#roulette-wheel {
+.raffle-roller-holder {
     position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100px;
     width: 100%;
-    height: 100%;
-    transition: transform 4s cubic-bezier(0.25, 0.1, 0.25, 1); /* Smooth animation */
 }
 
-.segment {
-    display: flex;
-    align-items: center;
-    justify-content: center;
+.raffle-roller-holder {
+    overflow: hidden;
+    border-radius: 2px;
+    border: 1px solid #3c3759;
+}
+
+.raffle-roller-holder {
     position: absolute;
-    width: 50%;
-    height: 50%;
-    color: white;
-    font-weight: bold;
-    font-size: 18px;
-    text-transform: uppercase;
-    transform-origin: 100% 100%;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 100px;
+    width: 100%;
 }
 
-    /* Segment Colors */
-    .segment:nth-child(1) {
-        background-color: blue;
-        transform: rotate(0deg);
+.raffle-roller-container {
+    width: 9999999999999999999px;
+    max-width: 999999999999999999px;
+    height: 100px;
+    background: #191726;
+    margin-left: 0;
+    transition: all 8s cubic-bezier(.08,.6,0,1);
+}
+
+.raffle-roller-holder:before {
+    content: "";
+    position: absolute;
+    border: none;
+    z-index: 12222225;
+    width: 5px;
+    height: 100%;
+    left: 50%;
+    background: #d16266;
+}
+
+.item {
+    display: inline-block;
+    float: left;
+    margin: 4px 0px 0.5px 5px;
+    width: 85px;
+    height: 88px;
+    float: left;
+    border: 1px solid #70677c;
+    background: #14202b;
+    background-size: 100%;
+    background-repeat: no-repeat;
+    background-position: center;
+}
+
+.class_red_item {
+    border-bottom: 4px solid #EB4B4B;
+}
+
+img {
+    border: 0;
+    vertical-align: middle;
+}
+
+.winning-item {
+    border: 2px solid #66b233;
+    position: relative;
+    top: -1px;
+    border-bottom: 4px solid #66b233;
+}
+
+.inventory {
+    margin: 0 auto;
+    width: 960px;
+    max-width: 953px;
+    padding: 10px 15px 6px;
+    height: auto;
+    border: 2px solid #1c3344;
+    background: #0e1a23;
+}
+
+    .inventory > .item {
+        float: none;
+        cursor: pointer;
+        margin: 4px 2px 0.5px 2px;
     }
 
-    .segment:nth-child(2) {
-        background-color: purple;
-        transform: rotate(90deg);
-    }
+        .inventory > .item:hover {
+            background-size: 90%;
+            background-color: #182a38;
+        }
 
-    .segment:nth-child(3) {
-        background-color: red;
-        transform: rotate(180deg);
-    }
-
-    .segment:nth-child(4) {
-        background-color: gold;
-        transform: rotate(270deg);
-    }
+        .inventory > .item:active {
+            height: 83px;
+            width: 80px;
+            position: relative;
+            top: -2px;
+            border: 2px solid #356d27;
+            border-bottom: 4px solid #356d27;
+        }

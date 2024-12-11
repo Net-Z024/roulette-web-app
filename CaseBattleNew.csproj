@@ -17,4 +17,7 @@
 	<ItemGroup>
 		<Protobuf Include="Protos\CaseOpener.proto" GrpcServices="Client" />
 	</ItemGroup>
+	<ItemGroup>
+	  <Folder Include="Models\" />
+	</ItemGroup>
 </Project>
