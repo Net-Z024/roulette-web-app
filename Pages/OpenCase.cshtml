@@ -41,7 +41,11 @@
 
 <script>
     // Serialize the CaseItems object to JavaScript
+    // Serialize the CaseItems object to JavaScript
     var caseItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CaseItems));
+    const itemWidth = 100; // Width of each item (in px, match your CSS)
+    const visibleItems = 5; // Number of items visible in the roller at once
+    const bufferLoops = 15; // Number of loops to simulate a long spin
 
     // This function handles starting the spin
     async function startSpin() {
@@ -49,41 +53,52 @@
         spinButton.disabled = true;
 
         try {
+            // Reset the animation state before starting a new spin
+            resetAnimation();
+
             // Prepare the dynamic case items (duplicates) for the roller
             generateItemsForRoller();
 
-            // Wait for the animation to complete before showing the result
+            // Fetch the winning item from the server
+            const response = await fetch('/OpenCase?handler=OpenCase', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch winner");
+            }
+
+            const data = await response.json();
+            const winningIndex = data.index; // Index of the winning item
+            console.log(`Winning index: ${winningIndex}`);
+
+            // Calculate the scroll position
+            const totalItems = bufferLoops * caseItems.length + visibleItems;
+            const finalPosition = -(itemWidth * (bufferLoops * caseItems.length + winningIndex - Math.floor(visibleItems / 2)));
+
+            // Animate the roller to the winning item
+            $('.raffle-roller-container').css({
+                transition: "all 8s cubic-bezier(.08,.6,0,1)", // Smooth animation
+                "margin-left": `${finalPosition}px` // Scroll to the winning item
+            });
+
+            // Wait for the animation to complete before updating the UI
             setTimeout(() => {
-                const winningIndex = getRandomInt(0, caseItems.length); // Get a random winner index
-                const winningItem = document.querySelectorAll('.raffle-roller-container .item')[winningIndex];
+                const winningItem = caseItems[winningIndex];
+                $('#rolled').html(winningItem.Name); // Display the winner's name
+                console.log(`Winning item: ${winningItem.Name}`);
 
-                // Make sure the container width is large enough
-                //const containerWidth = $('.raffle-roller-container').width();
-                //const totalItemsWidth = caseItems.length * 100; // Assuming each item is 100px wide
+                // Add the winning item to the inventory
+                const winElement = `<div class='item' style='background-image: url("${winningItem.ImageUrl}");'></div>`;
+                $(winElement).appendTo('.inventory');
 
-                // Set the correct width for the container to fit all items
-                //$('.raffle-roller-container').css('width', totalItemsWidth + 'px');
-
-                // Animate the roller to simulate the spinning effect (with a large scroll distance)
-                $('.raffle-roller-container').css({
-                    transition: "all 8s cubic-bezier(.08,.6,0,1)" // 8s transition duration
-                });
-
-                // Scroll to the winning item
-                $('.raffle-roller-container').css('margin-left', `-${6770*winningIndex}px`);
-
-                // After the spin, mark the winning item
-                setTimeout(() => {
-                    $(winningItem).addClass('winning-item');
-                    $('#rolled').html(caseItems[winningIndex].Name); // Display the winner's name
-                    console.log(caseItems[winningIndex]);
-
-                    // Add the winning item to the inventory
-                    const winElement = `<div class='item' style='background-image: url("${caseItems[winningIndex].ImageUrl}");'></div>`;
-                    $(winElement).appendTo('.inventory');
-                }, 8500); // Delay after the spin ends (8s for animation + 500ms delay)
-
-            }, 500); // Initial delay before starting the animation
+                // Re-enable the spin button for a new spin
+                spinButton.disabled = false;
+            }, 8500); // Wait for animation to complete
 
         } catch (error) {
             console.error("Error during fetch:", error);
@@ -92,21 +107,49 @@
         }
     }
 
-    // Function to generate more pictures of the existing items for the roller
+    // Function to generate more items for the roller
     function generateItemsForRoller() {
         // Clear existing items in the roller
         $('.raffle-roller-container').html('');
 
-        // Duplicate the items to make the wheel bigger
-        for (let i = 0; i < 101; i++) {
-            const randomItem = caseItems[Math.floor(Math.random() * caseItems.length)];
-            const element = `<div class="item class_red_item" style="background-image:url(${randomItem.ImageUrl});"></div>`;
+        // Duplicate the items to create a long spin effect
+        for (let i = 0; i < bufferLoops; i++) {
+            for(let j=0;j<3;j++)
+            {
+                  rand=getRandomInt(3);
+            item=caseItems[rand];
+            const element = `<div class="item class_red_item" style="background-image:url(${item.ImageUrl}); width: ${itemWidth}px;"></div>`;
+            $(element).appendTo('.raffle-roller-container');
+            }
+          
+            
+        }
+
+     
+
+        // Add a final set of items to complete the visible area
+        for (let i = 0; i < visibleItems; i++) {
+            const item = caseItems[i % caseItems.length];
+            const element = `<div class="item class_red_item" style="background-image:url(${item.ImageUrl}); width: ${itemWidth}px;"></div>`;
+            $(element).appendTo('.raffle-roller-container');
+        }
+        for (let i = 0; i < visibleItems; i++) {
+            const item = caseItems[i % caseItems.length];
+            const element = `<div class="item class_red_item" style="background-image:url(${item.ImageUrl}); width: ${itemWidth}px;"></div>`;
             $(element).appendTo('.raffle-roller-container');
         }
     }
 
-    // Utility function to generate a random integer between min (inclusive) and max (exclusive)
-    function getRandomInt(min, max) {
-        return Math.floor(Math.random() * (max - min)) + min;
+    // Function to reset the animation
+    function resetAnimation() {
+        $('.raffle-roller-container').css({
+            transition: "none", // Disable transition to reset instantly
+            "margin-left": "0px" // Reset position
+        });
     }
+    function getRandomInt(max) {
+  return Math.floor(Math.random() * max);
+}
+
 </script>
+
