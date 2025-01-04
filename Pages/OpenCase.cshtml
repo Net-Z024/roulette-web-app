@@ -1,5 +1,6 @@
 ﻿@page
 @Html.AntiForgeryToken()
+@using GrpcService1
 @model CaseBattleNew.Pages.OpenCaseModel
 @{
     ViewData["Title"] = "Open Case Roulette";
@@ -18,11 +19,11 @@
 <div class="raffle-roller">
     <div class="raffle-roller-holder">
         <div class="raffle-roller-container" style="margin-left: 0px;">
-            @foreach (var item in Model.CaseItems)
+            @foreach (var item in (Model.Chests.FirstOrDefault()?.PossibleItems ?? Enumerable.Empty<ChestItemDto>()).ToList())
             {
                 <div class="item class_red_item"
-                     style="background-image:url('@item.ImageUrl');">
-                    @item.Name
+                     style="background-image:url('@item.Item.ImageUrl');">
+                    @item.Item.Name
                 </div>
             }
         </div>
@@ -42,7 +43,7 @@
 <script>
     // Serialize the CaseItems object to JavaScript
     // Serialize the CaseItems object to JavaScript
-    var caseItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CaseItems));
+    var caseItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Chests.FirstOrDefault()?.PossibleItems ?? Enumerable.Empty<ChestItemDto>()).ToList());
     const itemWidth = 100; // Width of each item (in px, match your CSS)
     const visibleItems = 5; // Number of items visible in the roller at once
     const bufferLoops = 15; // Number of loops to simulate a long spin
