@@ -15,7 +15,9 @@
     </PackageReference>
   </ItemGroup>
 	<ItemGroup>
-		<Protobuf Include="Protos\CaseOpener.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\chest.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\item.proto" GrpcServices="Client" />
+		<Protobuf Include="Protos\user.proto" GrpcServices="Client" />
 	</ItemGroup>
 	<ItemGroup>
 	  <Folder Include="Models\" />
