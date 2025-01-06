@@ -19,11 +19,11 @@
 <div class="raffle-roller">
     <div class="raffle-roller-holder">
         <div class="raffle-roller-container" style="margin-left: 0px;">
-            @foreach (var item in (Model.Chests.FirstOrDefault()?.PossibleItems ?? Enumerable.Empty<ChestItemDto>()).ToList())
+            @foreach (var item in (Model.CaseItems))
             {
                 <div class="item class_red_item"
-                     style="background-image:url('@item.Item.ImageUrl');">
-                    @item.Item.Name
+                     style="background-image:url('@item.ImageUrl');">
+                    @item.Name
                 </div>
             }
         </div>
@@ -41,9 +41,8 @@
 <div class="inventory"></div>
 
 <script>
-    // Serialize the CaseItems object to JavaScript
-    // Serialize the CaseItems object to JavaScript
-    var caseItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.Chests.FirstOrDefault()?.PossibleItems ?? Enumerable.Empty<ChestItemDto>()).ToList());
+    var caseItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CaseItems));
+    console.log("here ff"+ caseItems[0]);
     const itemWidth = 100; // Width of each item (in px, match your CSS)
     const visibleItems = 5; // Number of items visible in the roller at once
     const bufferLoops = 15; // Number of loops to simulate a long spin
@@ -76,7 +75,7 @@
             const data = await response.json();
             const winningIndex = data.index; // Index of the winning item
             console.log(`Winning index: ${winningIndex}`);
-
+            console.log(`Win item: ${data.name}`);
             // Calculate the scroll position
             const totalItems = bufferLoops * caseItems.length + visibleItems;
             const finalPosition = -(itemWidth * (bufferLoops * caseItems.length + winningIndex - Math.floor(visibleItems / 2)));
@@ -89,7 +88,7 @@
 
             // Wait for the animation to complete before updating the UI
             setTimeout(() => {
-                const winningItem = caseItems[winningIndex];
+                const winningItem = caseItems[winningIndex-1];
                 $('#rolled').html(winningItem.Name); // Display the winner's name
                 console.log(`Winning item: ${winningItem.Name}`);
 
@@ -115,9 +114,9 @@
 
         // Duplicate the items to create a long spin effect
         for (let i = 0; i < bufferLoops; i++) {
-            for(let j=0;j<3;j++)
+            for(let j=0;j<caseItems.length;j++)
             {
-                  rand=getRandomInt(3);
+                  rand=getRandomInt(caseItems.length);
             item=caseItems[rand];
             const element = `<div class="item class_red_item" style="background-image:url(${item.ImageUrl}); width: ${itemWidth}px;"></div>`;
             $(element).appendTo('.raffle-roller-container');
