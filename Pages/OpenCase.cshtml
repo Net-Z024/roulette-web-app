@@ -8,59 +8,98 @@
 
 <h2 style="text-align: center; margin-top: 20px;">Case Roulette</h2>
 
-<!-- Spin Button -->
-<button id="spin-button" onclick="startSpin()">Open Case</button>
 
-<!-- Result Display -->
-<div id="result-display">
-    <h3>Result: <span id="result-name"></span></h3>
-</div>
 
-<div class="raffle-roller">
-    <div class="raffle-roller-holder">
-        <div class="raffle-roller-container" style="margin-left: 0px;">
-            @foreach (var item in (Model.CaseItems))
-            {
-                <div class="item class_red_item"
-                     style="background-image:url('@item.ImageUrl');">
-                    @item.Name
-                </div>
-            }
+
+@foreach (var chest in Model.Chests)
+{
+    <div class="case-card">
+        <div class="case-image" style="background-image: url('https://community.fastly.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXU5A1PIYQNqhpOSV-fRPasw8rsUFJ5KBFZv668FF8ugPDMIWpAuIq1w4KIlaChZOyFwzgJuZNy3-2T89T0jlC2rhZla2vwIJjVLFHz75yKpg/360fx360f');"></div>
+        <div class="case-details">
+            <h3 class="case-name">@chest.Name</h3>
+            <p class="case-price">$@chest.Price</p>
+            <button class="open-case-button" onclick="selectCase(@chest.Id)">Open</button>
         </div>
     </div>
+}
+<div id="spinSection" style="visibility:hidden">
+    <button id="spin-button" onclick="startSpin()">Open Case</button>
+
+    <div id="result-display">
+        <h3>Result: <span id="result-name"></span></h3>
+    </div>
+    <div class="raffle-roller">
+        <div class="raffle-roller-holder">
+            <div class="raffle-roller-container" id="raffle-roller-container" style="margin-left: 0px;">
+            </div>
+        </div>
+    </div>
+
+    <center>
+        <span style="font-size: 25px;">
+            Your winning is <span style="color: green;" id="rolled">rolling</span>
+            <br>
+            <button onclick="window.location='';">reset</button>
+        </span>
+    </center>
+    <br>
+    <div class="inventory"></div>
 </div>
-
-<center>
-    <span style="font-size: 25px;">
-        Your winning is <span style="color: green;" id="rolled">rolling</span>
-        <br>
-        <button onclick="window.location='';">reset</button>
-    </span>
-</center>
-<br>
-<div class="inventory"></div>
-
 <script>
-    var caseItems = @Html.Raw(System.Text.Json.JsonSerializer.Serialize(Model.CaseItems));
-    console.log("here ff"+ caseItems[0]);
-    const itemWidth = 100; // Width of each item (in px, match your CSS)
-    const visibleItems = 5; // Number of items visible in the roller at once
-    const bufferLoops = 15; // Number of loops to simulate a long spin
+    var caseItems = [];
+    var chestId = 0;
+    const itemWidth = 100; 
+    const visibleItems = 5; 
+    const bufferLoops = 15; 
 
-    // This function handles starting the spin
+    // Function to select a case
+    async function selectCase(selectedChestId) {
+        // Hide all chests
+        const allChests = document.querySelectorAll('.case-card');
+        allChests.forEach(chest => chest.style.display = 'none'); // Hide all chests
+
+        // Show the spin button and hide result display
+        document.getElementById('spinSection').style.visibility = 'visible';
+
+        try {
+            const response = await fetch(`/OpenCase?handler=GetChestItems&chestId=${selectedChestId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to fetch items");
+            }
+
+            const data = await response.json();
+            chestId = selectedChestId;
+            caseItems = data.items;
+
+            // Populate the roller right after selecting the case
+            generateItemsForRoller(); // Populate items in the roller
+
+        } catch (error) {
+            console.error("Error during fetch:", error);
+            alert("Error: " + error.message);
+        }
+    }
+
+
+    // Function to start the spin
     async function startSpin() {
         const spinButton = document.getElementById('spin-button');
         spinButton.disabled = true;
+        $('#rolled').html("rolling");
 
         try {
-            // Reset the animation state before starting a new spin
+            // Reset animation state
             resetAnimation();
-
-            // Prepare the dynamic case items (duplicates) for the roller
             generateItemsForRoller();
 
-            // Fetch the winning item from the server
-            const response = await fetch('/OpenCase?handler=OpenCase', {
+            const response = await fetch(`/OpenCase?handler=OpenCase&chestId=${chestId}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
@@ -74,9 +113,8 @@
 
             const data = await response.json();
             const winningIndex = data.index; // Index of the winning item
-            console.log(`Winning index: ${winningIndex}`);
-            console.log(`Win item: ${data.name}`);
-            // Calculate the scroll position
+
+            // Calculate the scroll position to reveal the winner
             const totalItems = bufferLoops * caseItems.length + visibleItems;
             const finalPosition = -(itemWidth * (bufferLoops * caseItems.length + winningIndex - Math.floor(visibleItems / 2)));
 
@@ -86,56 +124,40 @@
                 "margin-left": `${finalPosition}px` // Scroll to the winning item
             });
 
-            // Wait for the animation to complete before updating the UI
+            // Wait for the animation to complete and show the winner
             setTimeout(() => {
-                const winningItem = caseItems[winningIndex-1];
-                $('#rolled').html(winningItem.Name); // Display the winner's name
-                console.log(`Winning item: ${winningItem.Name}`);
-
-                // Add the winning item to the inventory
-                const winElement = `<div class='item' style='background-image: url("${winningItem.ImageUrl}");'></div>`;
+                const winningItem = caseItems[winningIndex - 1];
+                $('#rolled').html(winningItem.name); // Display winner's name
+                const winElement = `<div class='item' style='background-image: url("${winningItem.imageUrl}");'></div>`;
                 $(winElement).appendTo('.inventory');
-
-                // Re-enable the spin button for a new spin
                 spinButton.disabled = false;
             }, 8500); // Wait for animation to complete
 
         } catch (error) {
             console.error("Error during fetch:", error);
-            alert(`Error: ${error.message}`);
+            alert("Error: " + error.message);
             spinButton.disabled = false;
         }
     }
 
     // Function to generate more items for the roller
     function generateItemsForRoller() {
-        // Clear existing items in the roller
-        $('.raffle-roller-container').html('');
+    
 
         // Duplicate the items to create a long spin effect
         for (let i = 0; i < bufferLoops; i++) {
-            for(let j=0;j<caseItems.length;j++)
-            {
-                  rand=getRandomInt(caseItems.length);
-            item=caseItems[rand];
-            const element = `<div class="item class_red_item" style="background-image:url(${item.ImageUrl}); width: ${itemWidth}px;"></div>`;
-            $(element).appendTo('.raffle-roller-container');
+            for (let j = 0; j < caseItems.length; j++) {
+                const rand = getRandomInt(caseItems.length);
+                const item = caseItems[rand];
+                const element = `<div class="item" style="background-image: url(${item.imageUrl}); width: ${itemWidth}px;"></div>`;
+                $(element).appendTo('.raffle-roller-container');
             }
-          
-            
         }
 
-     
-
-        // Add a final set of items to complete the visible area
+        // Add final set of items to complete the visible area
         for (let i = 0; i < visibleItems; i++) {
             const item = caseItems[i % caseItems.length];
-            const element = `<div class="item class_red_item" style="background-image:url(${item.ImageUrl}); width: ${itemWidth}px;"></div>`;
-            $(element).appendTo('.raffle-roller-container');
-        }
-        for (let i = 0; i < visibleItems; i++) {
-            const item = caseItems[i % caseItems.length];
-            const element = `<div class="item class_red_item" style="background-image:url(${item.ImageUrl}); width: ${itemWidth}px;"></div>`;
+            const element = `<div class="item" style="background-image: url(${item.imageUrl}); width: ${itemWidth}px;"></div>`;
             $(element).appendTo('.raffle-roller-container');
         }
     }
@@ -147,9 +169,9 @@
             "margin-left": "0px" // Reset position
         });
     }
+
+    // Function to generate a random number
     function getRandomInt(max) {
-  return Math.floor(Math.random() * max);
-}
-
+        return Math.floor(Math.random() * max);
+    }
 </script>
-
