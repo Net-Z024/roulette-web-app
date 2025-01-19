@@ -2,6 +2,7 @@ using Grpc.Net.Client;
 using GrpcService1;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using System.Security.Claims;
 using System.Threading.Channels;
 
 namespace CaseBattleNew.Pages
@@ -39,7 +40,9 @@ namespace CaseBattleNew.Pages
             var client = new ChestGrpc.ChestGrpcClient(channel);
 
             // Make a request to open a chest
-            var response = await client.OpenChestAsync(new OpenChestRequest { UserId = 1, ChestId = chestId });
+            var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Sid)?.Value;
+            
+            var response = await client.OpenChestAsync(new OpenChestRequest { UserId = Int32.Parse(userIdClaim), ChestId = chestId });
 
             Console.WriteLine("TEST AAAAAAAAAAAAA" + response.ReceivedItem);
 
@@ -48,7 +51,8 @@ namespace CaseBattleNew.Pages
             {
                 Index = response.ReceivedItem.Id, // The index of the segment
                 Name = response.ReceivedItem.Name,   // The name of the selected item
-                ImageUrl = response.ReceivedItem.ImageUrl // Optional, if you want to display an image
+                ImageUrl = response.ReceivedItem.ImageUrl, // Optional, if you want to display an image
+                NewBalance = response.NewBalance
             });
         }
 

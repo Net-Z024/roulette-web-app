@@ -113,7 +113,8 @@
 
             const data = await response.json();
             const winningIndex = data.index; // Index of the winning item
-
+            const newBalance = data.newBalance;
+            $('#balanceId').html("Balance:"+newBalance);
             // Calculate the scroll position to reveal the winner
             const totalItems = bufferLoops * caseItems.length + visibleItems;
             const finalPosition = -(itemWidth * (bufferLoops * caseItems.length + winningIndex - Math.floor(visibleItems / 2)));
