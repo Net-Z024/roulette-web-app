@@ -1,0 +1,89 @@
+﻿@page
+@Html.AntiForgeryToken()
+
+@model CaseBattleNew.Pages.InventoryModel
+@{
+}
+
+@foreach (var item in Model.GroupedUserItems)
+{
+    <div class="case-card">
+        <div class="case-image" style="background-image:url(@item.ImageUrl);"></div>
+        <div class="case-details">
+            <h3 class="case-name">@item.Name</h3>
+            <p class="case-price">$@item.Value ($@(item.Quantity * item.Value))</p>
+            <p class="case-quantity">Quantity: @item.Quantity</p>
+            <button class="open-case-button"
+                    onclick="showSellForm('@item.Name', '@item.Value', '@item.ImageUrl', '@string.Join(",", item.ItemIds)')">
+                Sell
+            </button>
+        </div>
+    </div>
+}
+
+
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    async function showSellForm(itemName, itemValue, itemImage, itemIds) {
+        const idsArray = itemIds.split(',').map(id => parseInt(id)); // Parse the IDs into an array
+        let selectedQuantity = 1;
+
+        const { value: quantity } = await Swal.fire({
+            title: 'Sell item',
+            html: `
+                    <a href="${itemImage}" target="_blank">
+                        <img src="${itemImage}" alt="${itemName}" class="case-image" />
+                    </a><br><br>
+                    <strong>Item Name:</strong> <pre>${itemName}</pre>
+                    <strong>Price per item:</strong> <pre>${itemValue}</pre>
+                    <strong>Quantity:</strong>
+                    <input id="quantity-slider" type="range" min="1" max="${idsArray.length}" value="1" step="1" style="width: 100%;">
+                    <pre id="selected-quantity">Selected: 1</pre>
+                    <strong>Total Amount:</strong> <pre id="total-amount">$${itemValue}</pre>
+                `,
+            didRender: () => {
+                const slider = document.getElementById('quantity-slider');
+                const quantityDisplay = document.getElementById('selected-quantity');
+                const totalAmountDisplay = document.getElementById('total-amount');
+
+                slider.addEventListener('input', () => {
+                    selectedQuantity = slider.value;
+                    quantityDisplay.textContent = `Selected: ${selectedQuantity}`;
+                    totalAmountDisplay.textContent = `$${selectedQuantity * itemValue}`;
+                });
+            },
+            confirmButtonText: 'Sell',
+            showCancelButton: true,
+            preConfirm: () => {
+                return {
+                    quantity: selectedQuantity,
+                    idsToSell: idsArray.slice(0, selectedQuantity)
+                };
+            }
+        });
+
+        if (quantity) {
+            for (const id of quantity.idsToSell) {
+                try {
+                    const response = await fetch(`/Inventory?handler=SellItem&userItemId=${id}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' ,
+                        'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                        }
+
+                    });
+
+                    const result = await response.json();
+
+                    if (result.Success) {
+                        console.log(`Item with ID ${id} sold successfully. New Balance: $${result.NewBalance}`);
+                    } else {
+                        console.error(`Failed to sell item with ID ${id}`);
+                    }
+                } catch (error) {
+                    console.error('Error selling item:', error);
+                }
+            }
+        }
+    }
+</script>
