@@ -46,7 +46,8 @@ namespace CaseBattleNew.Pages
                     ImageUrl = group.First().Item.ImageUrl,
                     Value = (decimal)group.First().Item.Value,
                     Quantity = group.Count(),
-                    ItemIds = group.Select(item => item.Id).ToList() // Collect all item IDs in this group
+                    ItemIds = group.Select(item => item.Id).ToList()
+
                 })
                 .ToList();
 
@@ -57,7 +58,6 @@ namespace CaseBattleNew.Pages
             using var channel = GrpcChannel.ForAddress("http://localhost:5003");
             var client = new ItemGrpc.ItemGrpcClient(channel);
 
-            // Get the User ID from the claims
             var userIdClaim = User.Claims.FirstOrDefault(c => c.Type == ClaimTypes.Sid)?.Value;
 
             if (string.IsNullOrEmpty(userIdClaim))
@@ -65,14 +65,13 @@ namespace CaseBattleNew.Pages
                 return new JsonResult(new { Success = false, Message = "User not authenticated." });
             }
 
-            // Call the SellItem gRPC method
             var response = await client.SellItemAsync(new SellItemRequest
             {
                 UserId = int.Parse(userIdClaim),
                 UserItemId = userItemId
             });
 
-            // Return the response as JSON
+          
             return new JsonResult(new
             {
                 Success = response.Success,

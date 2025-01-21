@@ -13,12 +13,20 @@
 
 @foreach (var chest in Model.Chests)
 {
-    <div class="case-card">
+
+    <div class="case-card"
+         onmouseenter="showCaseTooltip(@chest.Id, this)"
+         onmouseleave="hideCaseTooltip(this)">
+       
         <div class="case-image" style="background-image: url('https://community.fastly.steamstatic.com/economy/image/-9a81dlWLwJ2UUGcVs_nsVtzdOEdtWwKGZZLQHTxDZ7I56KU0Zwwo4NUX4oFJZEHLbXU5A1PIYQNqhpOSV-fRPasw8rsUFJ5KBFZv668FF8ugPDMIWpAuIq1w4KIlaChZOyFwzgJuZNy3-2T89T0jlC2rhZla2vwIJjVLFHz75yKpg/360fx360f');"></div>
         <div class="case-details">
             <h3 class="case-name">@chest.Name</h3>
             <p class="case-price">$@chest.Price</p>
             <button class="open-case-button" onclick="selectCase(@chest.Id)">Open</button>
+        </div>
+        <div class="case-tooltip" style="display: none;">
+            <ul class="case-item-list">
+            </ul>
         </div>
     </div>
 }
@@ -175,4 +183,71 @@
     function getRandomInt(max) {
         return Math.floor(Math.random() * max);
     }
+    // Function to show tooltip with items
+    async function showCaseTooltip(chestId, caseCard) {
+        const tooltip = caseCard.querySelector('.case-tooltip');
+        const itemList = tooltip.querySelector('.case-item-list');
+
+        // Clear existing items
+        itemList.innerHTML = '';
+
+        try {
+            const response = await fetch(`/OpenCase?handler=GetChestItems&chestId=${chestId}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'RequestVerificationToken': document.getElementsByName('__RequestVerificationToken')[0].value
+                }
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to fetch chest items');
+            }
+
+            const data = await response.json();
+            console.log("Fetched items:", data.items);
+
+            data.items.forEach(item => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('tooltip-item');
+
+                // Add image
+                const itemImage = document.createElement('img');
+                itemImage.src = item.imageUrl; // Assuming item.imageUrl contains the image URL
+                itemImage.alt = item.name;
+                itemImage.classList.add('item-image');
+
+                // Add name
+                const itemName = document.createElement('span');
+                itemName.textContent = item.name;
+                itemName.classList.add('item-name');
+
+                // Add price
+                const itemPrice = document.createElement('span');
+                itemPrice.textContent = `$${item.value}`; // Assuming item.price contains the price
+                itemPrice.classList.add('case-price');
+
+                // Append all to the list item
+                listItem.appendChild(itemImage);
+                listItem.appendChild(itemName);
+                listItem.appendChild(itemPrice);
+
+                // Append the list item to the tooltip list
+                itemList.appendChild(listItem);
+            });
+
+            // Show the tooltip
+            tooltip.style.display = 'block';
+        } catch (error) {
+            console.error('Error fetching chest items:', error);
+        }
+    }
+
+
+    // Function to hide tooltip
+    function hideCaseTooltip(caseCard) {
+        const tooltip = caseCard.querySelector('.case-tooltip');
+        tooltip.style.display = 'none';
+    }
+
 </script>
